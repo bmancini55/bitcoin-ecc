@@ -17,12 +17,12 @@ export class Secp256k1 {
     /**
      * `a` value defined for secp256k1 for equation `y^2 = x^3 + ax + b`
      */
-    public static a = 0n;
+    public static a = new FieldValue(0n, Secp256k1.P);
 
     /**
      * `b` value defined for secp256k1 for equation `y^2 = x^3 + ax + b`
      */
-    public static b = 7n;
+    public static b = new FieldValue(7n, Secp256k1.P);
 
     /**
      * `N` defines the order used by secp256k1
@@ -32,20 +32,47 @@ export class Secp256k1 {
     /**
      * x-coordinate of the genertor point as a scalar value
      */
-    public static Gx = 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798n; // prettier-ignore
+    public static Gx = new FieldValue(
+        0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798n,
+        Secp256k1.P
+    );
 
     /**
      * x-coordinate of the generator point as a scalar value
      */
-    public static Gy = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8n; // prettier-ignore
+    public static Gy = new FieldValue(
+        0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8n,
+        Secp256k1.P
+    );
 
     /**
      * Generator as a defined elliptic curve point
      */
     public static G = new Point<FieldValue>(
-        new FieldValue(Secp256k1.Gx, Secp256k1.P),
-        new FieldValue(Secp256k1.Gy, Secp256k1.P),
-        new FieldValue(Secp256k1.a, Secp256k1.P),
-        new FieldValue(Secp256k1.b, Secp256k1.P)
+        Secp256k1.Gx,
+        Secp256k1.Gy,
+        Secp256k1.a,
+        Secp256k1.b
     );
+
+    /**
+     * Constructs a new `FieldValue` contained within the curve
+     * @param num
+     * @returns
+     */
+    public static fieldValue(num: bigint): FieldValue {
+        return new FieldValue(num, Secp256k1.P);
+    }
+
+    /**
+     * Constructs a new Point
+     */
+    public static point(x: bigint, y: bigint): Point<FieldValue> {
+        return new Point(
+            x ? Secp256k1.fieldValue(x) : undefined,
+            y ? Secp256k1.fieldValue(y) : undefined,
+            Secp256k1.a,
+            Secp256k1.b
+        );
+    }
 }

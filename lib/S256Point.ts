@@ -4,7 +4,6 @@ import { Signature } from "./Signature";
 import { bigToBuf, bigFromBuf } from "./util/BigIntUtil";
 import { Secp256k1 } from "./Secp256k1";
 import { FieldValue } from "./FieldValue";
-import { S256FieldValue } from "./S256FieldValue";
 
 /**
  * Defines a point on the secp256k1 curve by specifying the a and b values.
@@ -15,7 +14,7 @@ import { S256FieldValue } from "./S256FieldValue";
  * This class also specifies the order N, and restricts scalar multiplication
  * to the order N.
  */
-export class S256Point extends Point<S256FieldValue> {
+export class S256Point extends Point<FieldValue> {
     /**
      * Generator point for secp256k1
      */
@@ -27,7 +26,7 @@ export class S256Point extends Point<S256FieldValue> {
     /**
      * Infinity value
      */
-    public static Infinity = new S256Point(undefined, undefined);
+    public static Infinity = Secp256k1.point(undefined, undefined);
 
     /**
      * Parses an SEC public key from either uncompressed format or compressed format
@@ -43,23 +42,23 @@ export class S256Point extends Point<S256FieldValue> {
         // compressed format
         else {
             // x is easy to get
-            const x = new S256FieldValue(bigFromBuf(buf.slice(1)));
+            const x = new FieldValue(bigFromBuf(buf.slice(1)), Secp256k1.P);
 
             // right side of equation y^2 = x^3 +7
-            const right = x.pow(3n).add(new S256FieldValue(Secp256k1.b)); // prettier-ignore
+            const right = x.pow(3n).add(Secp256k1.b); // prettier-ignore
 
-            // solve the left side of the equation, this will result in two values
-            // for positive and negative: y and p-y
-            const beta = new S256FieldValue(right.num).sqrt();
+            // solve the left side of the equation, this will result in
+            // two values for positive and negative: y and p-y
+            const beta = right.sqrt();
 
-            let evenBeta: S256FieldValue;
-            let oddBeta: S256FieldValue;
+            let evenBeta: FieldValue;
+            let oddBeta: FieldValue;
 
             if (beta.num % 2n === 0n) {
                 evenBeta = beta;
-                oddBeta = new S256FieldValue(Secp256k1.P - beta.num);
+                oddBeta = Secp256k1.fieldValue(Secp256k1.P - beta.num);
             } else {
-                evenBeta = new S256FieldValue(Secp256k1.P - beta.num);
+                evenBeta = Secp256k1.fieldValue(Secp256k1.P - beta.num);
                 oddBeta = beta;
             }
 
@@ -74,10 +73,10 @@ export class S256Point extends Point<S256FieldValue> {
 
     constructor(x: bigint, y: bigint) {
         super(
-            x ? new S256FieldValue(x) : undefined,
-            y ? new S256FieldValue(y) : undefined,
-            new S256FieldValue(Secp256k1.a),
-            new S256FieldValue(Secp256k1.b)
+            x ? Secp256k1.fieldValue(x) : undefined,
+            y ? Secp256k1.fieldValue(y) : undefined,
+            Secp256k1.a,
+            Secp256k1.b
         );
     }
 
