@@ -3,6 +3,7 @@ import { Signature } from "../lib/Signature";
 import { S256Secret } from "../lib/S256Secret";
 import crypto from "crypto";
 import { bigFromBuf } from "../lib/util/BigIntUtil";
+import { S256Point } from "../lib/S256Point";
 
 describe("Signature", () => {
     describe("sign", () => {
@@ -11,7 +12,7 @@ describe("Signature", () => {
             const pk = new S256Secret(bigFromBuf(r));
             const z = bigFromBuf(crypto.randomBytes(32));
             const sig = pk.sign(z);
-            expect(pk.point.verify(z, sig)).to.equal(true);
+            expect(S256Point.verify(pk.point, z, sig)).to.equal(true);
         });
     });
 

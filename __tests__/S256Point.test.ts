@@ -7,24 +7,24 @@ import { Secp256k1 } from "../lib/Secp256k1";
 describe("S256Point", () => {
     describe("constructor", () => {
         it("check order of G", () => {
-            const g = S256Point.G;
+            const g = Secp256k1.G;
             const n = Secp256k1.N;
-            expect(g.smul(n)).to.deep.equal(S256Point.Infinity);
+            expect(g.smul(n)).to.deep.equal(Secp256k1.Infinity);
         });
     });
 
     describe(".verify()", () => {
-        const point = new S256Point(
-      BigInt("0x887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06c"),
-      BigInt("0x61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34"),
-    ); // prettier-ignore
+        const point = Secp256k1.point(
+            0x887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06cn,
+            0x61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34n
+        );
 
         it("signature 1", () => {
             const z = BigInt("0xec208baa0fc1c19f708a9ca96fdeff3ac3f230bb4a7ba4aede4942ad003c0f60"); // prettier-ignore
             const r = BigInt("0xac8d1c87e51d0d441be8b3dd5b05c8795b48875dffe00b7ffcfac23010d3a395"); // prettier-ignore
             const s = BigInt("0x68342ceff8935ededd102dd876ffd6ba72d6a427a3edb13d26eb0781cb423c4"); // prettier-ignore
             const sig = new Signature(r, s);
-            expect(point.verify(z, sig)).to.equal(true);
+            expect(S256Point.verify(point, z, sig)).to.equal(true);
         });
 
         it("signature 2", () => {
@@ -32,7 +32,7 @@ describe("S256Point", () => {
             const r = BigInt("0xeff69ef2b1bd93a66ed5219add4fb51e11a840f404876325a1e8ffe0529a2c"); // prettier-ignore
             const s = BigInt("0xc7207fee197d27c618aea621406f6bf5ef6fca38681d82b2f06fddbdce6feab6"); // prettier-ignore
             const sig = new Signature(r, s);
-            expect(point.verify(z, sig)).to.equal(true);
+            expect(S256Point.verify(point, z, sig)).to.equal(true);
         });
     });
 
@@ -54,7 +54,7 @@ describe("S256Point", () => {
 
             for (const [pk, ex] of tests) {
                 it(`${pk}`, () => {
-                    expect(pk.point.sec(false)).to.deep.equal(ex);
+                    expect(S256Point.sec(pk.point, false)).to.deep.equal(ex);
                 });
             }
         });
@@ -76,7 +76,7 @@ describe("S256Point", () => {
 
             for (const [pk, ex] of tests) {
                 it(`${pk}`, () => {
-                    expect(pk.point.sec(true)).to.deep.equal(ex);
+                    expect(S256Point.sec(pk.point, true)).to.deep.equal(ex);
                 });
             }
         });

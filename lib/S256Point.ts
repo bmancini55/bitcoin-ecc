@@ -16,28 +16,16 @@ import { FieldValue } from "./FieldValue";
  */
 export class S256Point extends Point<FieldValue> {
     /**
-     * Generator point for secp256k1
-     */
-    public static G = new S256Point(
-        BigInt("0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"), // prettier-ignore
-        BigInt("0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8") // prettier-ignore
-    );
-
-    /**
-     * Infinity value
-     */
-    public static Infinity = Secp256k1.point(undefined, undefined);
-
-    /**
-     * Parses an SEC public key from either uncompressed format or compressed format
+     * Parses an SEC public key from either uncompressed format or
+     * compressed format
      * @param buf
      */
-    public static parse(buf: Buffer): S256Point {
+    public static parse(buf: Buffer): Point<FieldValue> {
         // uncompressed point
         if (buf[0] === 0x04) {
             const x = bigFromBuf(buf.slice(1, 33));
             const y = bigFromBuf(buf.slice(33, 65));
-            return new S256Point(x, y);
+            return Secp256k1.point(x, y);
         }
         // compressed format
         else {
@@ -64,33 +52,11 @@ export class S256Point extends Point<FieldValue> {
 
             const isEven = buf[0] === 0x02;
             if (isEven) {
-                return new S256Point(x.num, evenBeta.num);
+                return Secp256k1.point(x.num, evenBeta.num);
             } else {
-                return new S256Point(x.num, oddBeta.num);
+                return Secp256k1.point(x.num, oddBeta.num);
             }
         }
-    }
-
-    constructor(x: bigint, y: bigint) {
-        super(
-            x ? Secp256k1.fieldValue(x) : undefined,
-            y ? Secp256k1.fieldValue(y) : undefined,
-            Secp256k1.a,
-            Secp256k1.b
-        );
-    }
-
-    /**
-     *
-     * @param scalar
-     */
-    public smul(scalar: bigint) {
-        scalar = mod(scalar, Secp256k1.N);
-        const point = super.smul(scalar);
-        return new S256Point(
-            point.x ? point.x.num : undefined,
-            point.y ? point.y.num : undefined
-        );
     }
 
     /**
@@ -114,11 +80,15 @@ export class S256Point extends Point<FieldValue> {
      * @param z hash of information that was signed
      * @param sig signature r,s
      */
-    public verify(z: bigint, sig: Signature): boolean {
+    public static verify(
+        point: Point<FieldValue>,
+        z: bigint,
+        sig: Signature
+    ): boolean {
         const sinv = pow(sig.s, Secp256k1.N - 2n, Secp256k1.N);
         const u = mod(z * sinv, Secp256k1.N);
         const v = mod(sig.r * sinv, Secp256k1.N);
-        const total = S256Point.G.smul(u).add(this.smul(v));
+        const total = Secp256k1.G.smul(u).add(point.smul(v));
         return sig.r === total.x.num;
     }
 
@@ -137,18 +107,21 @@ export class S256Point extends Point<FieldValue> {
      * 0x03 + x => when y is odd
      * ```
      */
-    public sec(compressed: boolean = false): Buffer {
+    public static sec(
+        point: Point<FieldValue>,
+        compressed: boolean = false
+    ): Buffer {
         if (compressed) {
-            const prefix = this.y.num % 2n === 0n ? 2 : 3;
+            const prefix = point.y.num % 2n === 0n ? 2 : 3;
             return Buffer.concat([
           Buffer.from([prefix]),
-          bigToBuf(this.x.num)
+          bigToBuf(point.x.num)
         ]); // prettier-ignore
         } else {
             return Buffer.concat([
                 Buffer.from([0x04]),
-                bigToBuf(this.x.num),
-                bigToBuf(this.y.num),
+                bigToBuf(point.x.num),
+                bigToBuf(point.y.num),
             ]);
         }
     }

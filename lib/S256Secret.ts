@@ -1,15 +1,16 @@
-import { S256Point } from "./S256Point";
 import { pow, mod } from "./util/BigIntMath";
 import { Signature } from "./Signature";
 import * as bigint from "./util/BigIntUtil";
 import crypto from "crypto";
 import { Secp256k1 } from "./Secp256k1";
+import { FieldValue } from "./FieldValue";
+import { Point } from "./Point";
 
 export class S256Secret {
-    public point: S256Point;
+    public point: Point<FieldValue>;
 
     constructor(readonly secret: bigint) {
-        this.point = S256Point.G.smul(secret);
+        this.point = Secp256k1.G.smul(secret);
     }
 
     public toString() {
@@ -23,7 +24,7 @@ export class S256Secret {
      */
     public sign(z: bigint): Signature {
         const k = this.genK(z);
-        const r = S256Point.G.smul(k).x.num;
+        const r = Secp256k1.G.smul(k).x.num;
         const kinv = pow(k, Secp256k1.N - 2n, Secp256k1.N);
         let s = mod((z + r * this.secret) * kinv, Secp256k1.N);
         if (s > Secp256k1.N / 2n) {

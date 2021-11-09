@@ -56,6 +56,11 @@ export class Secp256k1 {
     );
 
     /**
+     * Point at infinity
+     */
+    public static Infinity = Secp256k1.point(undefined, undefined);
+
+    /**
      * Constructs a new `FieldValue` contained within the curve
      * @param num
      * @returns
