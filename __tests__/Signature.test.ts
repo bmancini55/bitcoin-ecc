@@ -1,18 +1,18 @@
 import { expect } from "chai";
 import { Signature } from "../lib/Signature";
-import { S256Secret } from "../lib/S256Secret";
 import crypto from "crypto";
 import { bigFromBuf } from "../lib/util/BigIntUtil";
-import { S256Point } from "../lib/S256Point";
+import { Ecdsa } from "../lib/Ecdsa";
+import { Secp256k1 } from "../lib/Secp256k1";
 
 describe("Signature", () => {
     describe("sign", () => {
         it("creates valid sig", () => {
-            const r = crypto.randomBytes(32);
-            const pk = new S256Secret(bigFromBuf(r));
+            const secret = bigFromBuf(crypto.randomBytes(32));
+            const point = Secp256k1.pointFromSecret(secret);
             const z = bigFromBuf(crypto.randomBytes(32));
-            const sig = pk.sign(z);
-            expect(S256Point.verify(pk.point, z, sig)).to.equal(true);
+            const sig = Ecdsa.sign(secret, z);
+            expect(Ecdsa.verify(point, z, sig)).to.equal(true);
         });
     });
 

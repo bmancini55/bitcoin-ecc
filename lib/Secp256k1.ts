@@ -80,4 +80,13 @@ export class Secp256k1 {
             Secp256k1.b
         );
     }
+
+    /**
+     * Generates a point from a secret
+     * @param secret
+     * @returns
+     */
+    public static pointFromSecret(secret: bigint): Point<FieldValue> {
+        return Secp256k1.G.smul(secret);
+    }
 }
