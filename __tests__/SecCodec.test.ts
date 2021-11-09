@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { Signature } from "../lib/Signature";
+import { EcdsaSig } from "../lib/EcdsaSig";
 import { Secp256k1 } from "../lib/Secp256k1";
 import { FieldValue } from "../lib/FieldValue";
 import { SecCodec } from "../lib/SecCodec";

@@ -4,7 +4,7 @@ import * as bufutil from "./util/BufferUtil";
 /**
  * Signature for secp256k1 that houses the `r` and `s` points.
  */
-export class Signature {
+export class EcdsaSig {
     constructor(readonly r: bigint, readonly s: bigint) {}
 
     /**
@@ -58,7 +58,7 @@ export class Signature {
         pos += slen;
 
         // return object!
-        return new Signature(r, s);
+        return new EcdsaSig(r, s);
     }
 
     public toString() {

@@ -2,7 +2,7 @@ import { FieldValue } from "./FieldValue";
 import { Point } from "./Point";
 import { Rfc6979 } from "./Rfc6979";
 import { Secp256k1 } from "./Secp256k1";
-import { Signature } from "./Signature";
+import { EcdsaSig } from "./EcdsaSig";
 import { mod, pow } from "./util/BigIntMath";
 
 export class Ecdsa {
@@ -11,7 +11,7 @@ export class Ecdsa {
      * @param secret
      * @param z
      */
-    public static sign(secret: bigint, z: bigint): Signature {
+    public static sign(secret: bigint, z: bigint): EcdsaSig {
         const k = Rfc6979.genK(secret, z, Secp256k1.N);
         const r = Secp256k1.G.smul(k).x.num;
         const kinv = pow(k, Secp256k1.N - 2n, Secp256k1.N);
@@ -19,7 +19,7 @@ export class Ecdsa {
         if (s > Secp256k1.N / 2n) {
             s = Secp256k1.N - s;
         }
-        return new Signature(r, s);
+        return new EcdsaSig(r, s);
     }
 
     /**
@@ -47,7 +47,7 @@ export class Ecdsa {
     public static verify(
         point: Point<FieldValue>,
         z: bigint,
-        sig: Signature
+        sig: EcdsaSig
     ): boolean {
         const sinv = pow(sig.s, Secp256k1.N - 2n, Secp256k1.N);
         const u = mod(z * sinv, Secp256k1.N);
