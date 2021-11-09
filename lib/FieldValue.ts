@@ -164,4 +164,12 @@ export class FieldValue implements IOperable {
         }
         return this.pow((this.prime + 1n) / 4n);
     }
+
+    /**
+     * Returns true if the value is even
+     * @returns
+     */
+    public isEven(): boolean {
+        return mod(this.num, 2n) === 0n;
+    }
 }

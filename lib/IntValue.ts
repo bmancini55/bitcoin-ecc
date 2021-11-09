@@ -1,4 +1,5 @@
 import { IOperable } from "./Operable";
+import { mod } from "./util/BigIntMath";
 
 /**
  * This is a wrapper class for standard lib's `BigInt` type. It conforms
@@ -43,5 +44,9 @@ export class IntValue implements IOperable {
 
     public smul(scalar: bigint): IntValue {
         return new IntValue(this.value * scalar);
+    }
+
+    public isEven(): boolean {
+        return mod(this.value, 2n) === 0n;
     }
 }
