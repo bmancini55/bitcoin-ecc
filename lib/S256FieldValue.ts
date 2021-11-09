@@ -1,4 +1,5 @@
 import { FieldValue } from "./FieldValue";
+import { Secp256k1 } from "./Secp256k1";
 
 /**
  * Defines a subclass of a `FieldValue` for use with `secp256k1`.
@@ -7,17 +8,8 @@ import { FieldValue } from "./FieldValue";
  * with values that belong to to the field.
  */
 export class S256FieldValue extends FieldValue {
-    /**
-     * Prime for secp256k1
-     *
-     * * ```
-     * P = 2**256 - 2**32 - 977
-     * ```
-     */
-    public static P = 2n ** 256n - 2n ** 32n - 977n;
-
     constructor(num: bigint) {
-        super(num, S256FieldValue.P);
+        super(num, Secp256k1.P);
     }
 
     /**
@@ -29,7 +21,7 @@ export class S256FieldValue extends FieldValue {
      * ```
      */
     public sqrt(): S256FieldValue {
-        const r = this.pow((S256FieldValue.P + 1n) / 4n);
+        const r = this.pow((Secp256k1.P + 1n) / 4n);
         return new S256FieldValue(r.num);
     }
 }

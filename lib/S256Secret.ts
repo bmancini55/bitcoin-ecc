@@ -3,6 +3,7 @@ import { pow, mod } from "./util/BigIntMath";
 import { Signature } from "./Signature";
 import * as bigint from "./util/BigIntUtil";
 import crypto from "crypto";
+import { Secp256k1 } from "./Secp256k1";
 
 export class S256Secret {
     public point: S256Point;
@@ -23,10 +24,10 @@ export class S256Secret {
     public sign(z: bigint): Signature {
         const k = this.genK(z);
         const r = S256Point.G.smul(k).x.num;
-        const kinv = pow(k, S256Point.N - 2n, S256Point.N);
-        let s = mod((z + r * this.secret) * kinv, S256Point.N);
-        if (s > S256Point.N / 2n) {
-            s = S256Point.N - s;
+        const kinv = pow(k, Secp256k1.N - 2n, Secp256k1.N);
+        let s = mod((z + r * this.secret) * kinv, Secp256k1.N);
+        if (s > Secp256k1.N / 2n) {
+            s = Secp256k1.N - s;
         }
         return new Signature(r, s);
     }
@@ -40,8 +41,8 @@ export class S256Secret {
         let k = Buffer.alloc(32, 0x00);
         let v = Buffer.alloc(32, 0x01);
 
-        if (z > S256Point.N) {
-            z -= S256Point.N;
+        if (z > Secp256k1.N) {
+            z -= Secp256k1.N;
         }
 
         const zbytes = bigint.bigToBuf(z);
@@ -63,7 +64,7 @@ export class S256Secret {
         while (true) {
             v = crypto.createHmac(h, k).update(v).digest();
             const candidate = bigint.bigFromBuf(v);
-            if (candidate >= 1n && candidate < S256Point.N) {
+            if (candidate >= 1n && candidate < Secp256k1.N) {
                 return candidate;
             }
 

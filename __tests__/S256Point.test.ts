@@ -2,12 +2,13 @@ import { expect } from "chai";
 import { S256Point } from "../lib/S256Point";
 import { Signature } from "../lib/Signature";
 import { S256Secret } from "../lib/S256Secret";
+import { Secp256k1 } from "../lib/Secp256k1";
 
 describe("S256Point", () => {
     describe("constructor", () => {
         it("check order of G", () => {
             const g = S256Point.G;
-            const n = S256Point.N;
+            const n = Secp256k1.N;
             expect(g.smul(n)).to.deep.equal(S256Point.Infinity);
         });
     });
