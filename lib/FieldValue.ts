@@ -8,6 +8,13 @@ import { mod, pow } from "./util/BigIntMath";
  */
 export class FieldValue implements IOperable {
     /**
+     * Indicates if the field value supports the sqrt operation.
+     * Currently this is only supported for prime values that are
+     * `prime % 4 = 3`.
+     */
+    public canSqrt: boolean;
+
+    /**
      * Constructs a finite field element by accepting the value and the
      * order of the field as value.
      * @param num value in the finite field
@@ -19,6 +26,8 @@ export class FieldValue implements IOperable {
         }
         this.num = num;
         this.prime = prime;
+
+        this.canSqrt = mod(prime, 4n) === 3n;
     }
 
     public toString() {
@@ -139,5 +148,20 @@ export class FieldValue implements IOperable {
     public smul(scalar: bigint): FieldValue {
         const num = mod(this.num * scalar, this.prime);
         return new FieldValue(num, this.prime);
+    }
+
+    /**
+     * Calculate the sqrt of the finite field which is possible if
+     * `p % 4 = 3`. The formula for this is:
+     *
+     * ```
+     * v^((P + 1) / 4)
+     * ```
+     */
+    public sqrt(): FieldValue {
+        if (!this.canSqrt) {
+            throw new Error("No algorithm for sqrt");
+        }
+        return this.pow((this.prime + 1n) / 4n);
     }
 }
