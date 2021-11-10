@@ -43,6 +43,30 @@ export class Curve {
     }
 
     /**
+     * Returns true if curve definitions are the same
+     * @param other
+     */
+    public eq(other: Curve): boolean {
+        return (
+            this.P === other.P &&
+            this.a === other.a &&
+            this.b === other.b &&
+            this.Gx === other.Gx &&
+            this.Gy === other.Gy
+        );
+    }
+
+    /**
+     * Returns true if the values are on the curve
+     * @param x x-coordinate
+     * @param y y-coordinate
+     */
+    public onCurve(x: bigint, y: bigint): boolean {
+        const f = this.field;
+        return f.pow(y, 2n) === f.add(f.add(f.pow(x, 3n), f.mul(this.a, x)), this.b);
+    }
+
+    /**
      * Constructs a CurvePoint with the equation: `P=sk*G`. Fails if the
      * supplied secret is 0 or is greater than the N.
      * @param sk

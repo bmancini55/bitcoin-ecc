@@ -17,20 +17,11 @@ export class CurvePoint {
             return;
         }
 
-        const fp = curve.field;
         // validate that the point (x,y) is on the curve which means
         // `y^2 == x^3 + a * x + b`. If this doest hold, the point is not
         // on the curve
-        if (fp.pow(y, 2n) !== fp.add(fp.add(fp.pow(x, 3n), fp.mul(curve.a, x)), curve.b)) {
+        if (!curve.onCurve(x, y)) {
             throw new Error(`(${x}, ${y}) is not on the curve`);
-        }
-    }
-
-    public toString() {
-        if (this.x === undefined) {
-            return "CurvePoint(infinity)";
-        } else {
-            return `CurvePoint(${this.x},${this.y})_${this.curve.a}_${this.curve.b}`;
         }
     }
 
@@ -44,31 +35,8 @@ export class CurvePoint {
         return (
             ((this.x && this.x === other.x) || (!this.x && !other.x)) &&
             ((this.y && this.y === other.y) || (!this.y && !other.y)) &&
-            this.curve.a === other.curve.a &&
-            this.curve.b === other.curve.b
+            this.curve.eq(other.curve)
         );
-    }
-
-    /**
-     * Returns true when the values (x, y, a, b) of this point do not
-     * match the other point
-     * @param other
-     */
-    public neq(other: CurvePoint): boolean {
-        return !this.eq(other);
-    }
-
-    /**
-     * Returns true when the x and y values supplied are on the curve
-     * @param x
-     * @param y
-     */
-    public onCurve(x: bigint, y: bigint): boolean {
-        // y^2 === x^3 + a * x + b
-        const f = this.curve.field;
-        const a = this.curve.a;
-        const b = this.curve.b;
-        return f.pow(y, 2n) === f.add(f.add(f.pow(x, 3n), f.mul(a, x)), b);
     }
 
     /**
@@ -124,7 +92,7 @@ export class CurvePoint {
     /**
      * Inverts the point across the x-axis by negating the y value.
      */
-    public inverse(): CurvePoint {
+    public invert(): CurvePoint {
         if (this.x === undefined) {
             return new CurvePoint(this.curve, undefined, undefined);
         }
@@ -137,7 +105,7 @@ export class CurvePoint {
      * @param other
      */
     public sub(other: CurvePoint): CurvePoint {
-        return this.add(other.inverse());
+        return this.add(other.invert());
     }
 
     /**
