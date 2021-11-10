@@ -4,9 +4,7 @@ import { FieldValue } from "../lib/FieldValue";
 describe("FieldValue", () => {
     describe(".toString()", () => {
         it("should stringify correctly", () => {
-            expect(new FieldValue(7n, 13n).toString()).to.equal(
-                "FieldValue_13(7)"
-            );
+            expect(new FieldValue(7n, 13n).toString()).to.equal("FieldValue_13(7)");
         });
     });
 
@@ -173,6 +171,25 @@ describe("FieldValue", () => {
             const a = new FieldValue(7n, 13n);
             const b = 3n;
             expect(a.smul(b)).to.deep.equal(new FieldValue(8n, 13n));
+        });
+    });
+
+    describe(".isEven()", () => {
+        it("should return true for even", () => {
+            const sut = new FieldValue(2n, 7n);
+            expect(sut.isEven()).to.equal(true);
+        });
+
+        it("should return false for odd", () => {
+            const sut = new FieldValue(3n, 7n);
+            expect(sut.isEven()).to.equal(false);
+        });
+    });
+
+    describe(".neg()", () => {
+        it("should return value that makes a + b = 0", () => {
+            const sut = new FieldValue(3n, 7n);
+            expect(sut.neg().num).to.equal(4n);
         });
     });
 });

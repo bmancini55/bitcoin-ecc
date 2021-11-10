@@ -19,9 +19,24 @@ describe("Schnorr", () => {
                 const sigBuf = Buffer.from(sig, "hex");
 
                 const result = Schnorr.sign(secretBuf, messageBuf, auxBuf);
-                expect(result[0].toString("hex")).to.equal(sigBuf.slice(0, 32).toString("hex"));
-                expect(result[1].toString("hex")).to.equal(sigBuf.slice(32).toString("hex"));
+                const r = result.slice(0, 32);
+                const s = result.slice(32);
+                expect(r.toString("hex")).to.equal(sigBuf.slice(0, 32).toString("hex"));
+                expect(s.toString("hex")).to.equal(sigBuf.slice(32).toString("hex"));
             });
         }
+
+        it(`verify ${idx}: ${comment}`, () => {
+            const pubkeyBuf = Buffer.from(pubkey, "hex");
+            const messageBuf = Buffer.from(message, "hex");
+            const sigBuf = Buffer.from(sig, "hex");
+
+            const resBool = result === "TRUE";
+            try {
+                expect(Schnorr.verify(pubkeyBuf, messageBuf, sigBuf)).to.equal(resBool);
+            } catch (ex) {
+                expect(resBool).to.equal(false);
+            }
+        });
     }
 });

@@ -90,9 +90,7 @@ export class Point<T extends IOperable> {
      */
     public add(other: Point<T>): Point<T> {
         if (this.a.neq(other.a) || this.b.neq(other.b)) {
-            throw new Error(
-                `Points ${this} and ${other} are not on same curve`
-            );
+            throw new Error(`Points ${this} and ${other} are not on same curve`);
         }
 
         // handle me as identity point
@@ -126,6 +124,26 @@ export class Point<T extends IOperable> {
             const y = s.mul(this.x.sub(x)).sub(this.y) as T;
             return new Point<T>(x, y, this.a, this.b);
         }
+    }
+
+    /**
+     * Inverts the point across the x-axis by negating the y value.
+     */
+    public inverse(): Point<T> {
+        if (this.x === undefined) {
+            return Point.infinity(this.a, this.b);
+        }
+
+        return new Point<T>(this.x, this.y.neg() as T, this.a, this.b);
+    }
+
+    /**
+     * Subtracts the value from the current point. Internally this
+     * simply negates the other point and adds it to our point.
+     * @param other
+     */
+    public sub(other: Point<T>): Point<T> {
+        return this.add(other.inverse());
     }
 
     /**
