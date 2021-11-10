@@ -99,4 +99,19 @@ export class FiniteField {
     public neg(a: bigint): bigint {
         return this.p - a;
     }
+
+    /**
+     * Calculate the sqrt of the finite field which is possible if
+     * `p % 4 = 3`. The formula for this is:
+     *
+     * ```
+     * v^((P + 1) / 4)
+     * ```
+     */
+    public sqrt(a: bigint): bigint {
+        if (this.p % 4n !== 3n) {
+            throw new Error("No algorithm for sqrt");
+        }
+        return this.pow(a, (this.p + 1n) / 4n);
+    }
 }

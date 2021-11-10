@@ -1,7 +1,5 @@
 import { expect } from "chai";
-import { EcdsaSig } from "../lib/EcdsaSig";
-import { Secp256k1 } from "../lib/Secp256k1";
-import { FieldValue } from "../lib/FieldValue";
+import { CurveSecp256k1 } from "../lib/Secp256k1";
 import { SecCodec } from "../lib/SecCodec";
 
 describe("SecCodec", () => {
@@ -24,7 +22,7 @@ describe("SecCodec", () => {
 
             for (const [secret, ex] of tests) {
                 it(`${secret}`, () => {
-                    const point = Secp256k1.pointFromSecret(secret);
+                    const point = CurveSecp256k1.pubPoint(secret);
                     expect(SecCodec.encode(point, false)).to.deep.equal(ex);
                 });
             }
@@ -48,7 +46,7 @@ describe("SecCodec", () => {
 
             for (const [secret, ex] of tests) {
                 it(`${secret}`, () => {
-                    const point = Secp256k1.pointFromSecret(secret);
+                    const point = CurveSecp256k1.pubPoint(secret);
                     expect(SecCodec.encode(point, true)).to.deep.equal(ex);
                 });
             }
@@ -74,7 +72,7 @@ describe("SecCodec", () => {
 
             for (const [buf, secret] of tests) {
                 it(`${buf.toString("hex")}`, () => {
-                    const point = Secp256k1.pointFromSecret(secret);
+                    const point = CurveSecp256k1.pubPoint(secret);
                     expect(SecCodec.decode(buf)).to.deep.equal(point);
                 });
             }
@@ -97,7 +95,7 @@ describe("SecCodec", () => {
 
             for (const [buf, secret] of tests) {
                 it(`${buf.toString("hex")}`, () => {
-                    const point = Secp256k1.pointFromSecret(secret);
+                    const point = CurveSecp256k1.pubPoint(secret);
                     expect(SecCodec.decode(buf)).to.deep.equal(point);
                 });
             }

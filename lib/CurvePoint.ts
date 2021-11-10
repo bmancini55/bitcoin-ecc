@@ -1,45 +1,36 @@
-import { IOperable } from "./Operable";
+import { Curve } from "./Curve";
 
 /**
  * This class is a a generic point on some elliptic cuve. The curve must
  * have the form `y^2 = x^3 + ax + b` and is defined by the two values
  * `a` and `b`.
  */
-export class Point<T extends IOperable> {
+export class CurvePoint {
     /**
-     * Returns the point at infinity
-     * @param a
-     * @param b
-     */
-    public static infinity<T extends IOperable>(a: T, b: T) {
-        return new Point(undefined, undefined, a, b);
-    }
-
-    /**
-     *
+     * @param curve elliptic curve
      * @param x x-coordinate of the generator point
      * @param y y-coordinate of the generator point
-     * @param a curve definition
-     * @param b curve definition
      * @returns
      */
-    constructor(readonly x: T, readonly y: T, readonly a: T, readonly b: T) {
+    constructor(readonly curve: Curve, readonly x: bigint, readonly y: bigint) {
         if (x === undefined && y === undefined) {
             return;
         }
+
+        const fp = curve.field;
         // validate that the point (x,y) is on the curve which means
         // `y^2 == x^3 + a * x + b`. If this doest hold, the point is not
         // on the curve
-        if (y.pow(2n).neq(x.pow(3n).add(a.mul(x)).add(b))) {
+        if (fp.pow(y, 2n) !== fp.add(fp.add(fp.pow(x, 3n), fp.mul(curve.a, x)), curve.b)) {
             throw new Error(`(${x}, ${y}) is not on the curve`);
         }
     }
 
     public toString() {
         if (this.x === undefined) {
-            return "Point(infinity)";
+            return "CurvePoint(infinity)";
         } else {
-            return `Point(${this.x},${this.y})_${this.a}_${this.b}`;
+            return `CurvePoint(${this.x},${this.y})_${this.curve.a}_${this.curve.b}`;
         }
     }
 
@@ -48,13 +39,13 @@ export class Point<T extends IOperable> {
      * values of the other point.
      * @param other
      */
-    public eq(other: Point<T>): boolean {
+    public eq(other: CurvePoint): boolean {
         if (!other) return false;
         return (
-            ((this.x && this.x.eq(other.x)) || (!this.x && !other.x)) &&
-            ((this.y && this.y.eq(other.y)) || (!this.y && !other.y)) &&
-            this.a.eq(other.a) &&
-            this.b.eq(other.b)
+            ((this.x && this.x === other.x) || (!this.x && !other.x)) &&
+            ((this.y && this.y === other.y) || (!this.y && !other.y)) &&
+            this.curve.a === other.curve.a &&
+            this.curve.b === other.curve.b
         );
     }
 
@@ -63,7 +54,7 @@ export class Point<T extends IOperable> {
      * match the other point
      * @param other
      */
-    public neq(other: Point<T>): boolean {
+    public neq(other: CurvePoint): boolean {
         return !this.eq(other);
     }
 
@@ -72,9 +63,12 @@ export class Point<T extends IOperable> {
      * @param x
      * @param y
      */
-    public onCurve(x: IOperable, y: IOperable): boolean {
+    public onCurve(x: bigint, y: bigint): boolean {
         // y^2 === x^3 + a * x + b
-        return y.pow(2n).eq(x.pow(3n).add(this.a.mul(x).add(this.b)));
+        const f = this.curve.field;
+        const a = this.curve.a;
+        const b = this.curve.b;
+        return f.pow(y, 2n) === f.add(f.add(f.pow(x, 3n), f.mul(a, x)), b);
     }
 
     /**
@@ -88,10 +82,11 @@ export class Point<T extends IOperable> {
      *    the curve and reflect across the x-axis
      * @param other
      */
-    public add(other: Point<T>): Point<T> {
-        if (this.a.neq(other.a) || this.b.neq(other.b)) {
-            throw new Error(`Points ${this} and ${other} are not on same curve`);
-        }
+    public add(other: CurvePoint): CurvePoint {
+        // if (this.a.neq(other.a) || this.b.neq(other.b)) {
+        //     throw new Error(`Points ${this} and ${other} are not on same curve`);
+        // }
+        const f = this.curve.field;
 
         // handle me as identity point
         if (this.x === undefined) return other;
@@ -100,41 +95,40 @@ export class Point<T extends IOperable> {
         if (other.x === undefined) return this;
 
         // handle additive inverse, same x but different y
-        if (this.x.eq(other.x) && this.y.neq(other.y)) {
-            return Point.infinity(this.a, this.b);
+        if (this.x === other.x && this.y !== other.y) {
+            return new CurvePoint(this.curve, undefined, undefined);
         }
 
         // handle when this.x !== other.x
-        if (this.x.neq(other.x)) {
-            const s = other.y.sub(this.y).div(other.x.sub(this.x));
-            const x = s.pow(2n).sub(this.x).sub(other.x) as T;
-            const y = s.mul(this.x.sub(x)).sub(this.y) as T;
-            return new Point<T>(x, y, this.a, this.b);
+        if (this.x !== other.x) {
+            const s = f.div(f.sub(other.y, this.y), f.sub(other.x, this.x));
+            const x = f.sub(f.sub(f.pow(s, 2n), this.x), other.x);
+            const y = f.sub(f.mul(s, f.sub(this.x, x)), this.y);
+            return new CurvePoint(this.curve, x, y);
         }
 
         // handle when tangent line is vertical
-        if (this.eq(other) && this.y.eq(this.x.smul(0n))) {
-            return Point.infinity(this.a, this.b);
+        if (this.eq(other) && this.y === f.mul(this.x, 0n)) {
+            return new CurvePoint(this.curve, undefined, undefined);
         }
 
         // handle when p1 = p2
         if (this.eq(other)) {
-            const s = this.x.pow(2n).smul(3n).add(this.a).div(this.y.smul(2n));
-            const x = s.pow(2n).sub(this.x.smul(2n)) as T;
-            const y = s.mul(this.x.sub(x)).sub(this.y) as T;
-            return new Point<T>(x, y, this.a, this.b);
+            const s = f.div(f.add(f.mul(f.pow(this.x, 2n), 3n), this.curve.a), f.mul(this.y, 2n));
+            const x = f.sub(f.pow(s, 2n), f.mul(this.x, 2n));
+            const y = f.sub(f.mul(s, f.sub(this.x, x)), this.y);
+            return new CurvePoint(this.curve, x, y);
         }
     }
 
     /**
      * Inverts the point across the x-axis by negating the y value.
      */
-    public inverse(): Point<T> {
+    public inverse(): CurvePoint {
         if (this.x === undefined) {
-            return Point.infinity(this.a, this.b);
+            return new CurvePoint(this.curve, undefined, undefined);
         }
-
-        return new Point<T>(this.x, this.y.neg() as T, this.a, this.b);
+        return new CurvePoint(this.curve, this.x, this.curve.field.neg(this.y));
     }
 
     /**
@@ -142,7 +136,7 @@ export class Point<T extends IOperable> {
      * simply negates the other point and adds it to our point.
      * @param other
      */
-    public sub(other: Point<T>): Point<T> {
+    public sub(other: CurvePoint): CurvePoint {
         return this.add(other.inverse());
     }
 
@@ -150,9 +144,9 @@ export class Point<T extends IOperable> {
      * Scalar multiply a point using binary expansion
      * @param scalar
      */
-    public smul(scalar: bigint): Point<T> {
-        let current: Point<T> = this;
-        let result = new Point<T>(undefined, undefined, this.a, this.b);
+    public smul(scalar: bigint): CurvePoint {
+        let current: CurvePoint = this;
+        let result = new CurvePoint(this.curve, undefined, undefined);
         while (scalar) {
             if (scalar & 1n) {
                 result = result.add(current);

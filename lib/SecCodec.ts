@@ -1,6 +1,5 @@
-import { FieldValue } from "./FieldValue";
-import { Point } from "./Point";
-import { Secp256k1 } from "./Secp256k1";
+import { CurveSecp256k1 } from "./Secp256k1";
+import { CurvePoint } from "./CurvePoint";
 import { bigFromBuf, bigToBuf } from "./util/BigIntUtil";
 
 export class SecCodec {
@@ -9,41 +8,43 @@ export class SecCodec {
      * compressed format
      * @param buf
      */
-    public static decode(buf: Buffer): Point<FieldValue> {
+    public static decode(buf: Buffer): CurvePoint {
         // uncompressed point
         if (buf[0] === 0x04) {
             const x = bigFromBuf(buf.slice(1, 33));
             const y = bigFromBuf(buf.slice(33, 65));
-            return Secp256k1.point(x, y);
+            return new CurvePoint(CurveSecp256k1, x, y);
         }
         // compressed format
         else {
+            const f = CurveSecp256k1.field;
+
             // x is easy to get
-            const x = new FieldValue(bigFromBuf(buf.slice(1)), Secp256k1.P);
+            const x = bigFromBuf(buf.slice(1));
 
             // right side of equation y^2 = x^3 +7
-            const right = x.pow(3n).add(Secp256k1.b); // prettier-ignore
+            const right = f.add(f.pow(x, 3n), CurveSecp256k1.b);
 
             // solve the left side of the equation, this will result in
             // two values for positive and negative: y and p-y
-            const beta = right.sqrt();
+            const beta = f.sqrt(right);
 
-            let evenBeta: FieldValue;
-            let oddBeta: FieldValue;
+            let evenBeta: bigint;
+            let oddBeta: bigint;
 
-            if (beta.num % 2n === 0n) {
+            if (beta % 2n === 0n) {
                 evenBeta = beta;
-                oddBeta = Secp256k1.fieldValue(Secp256k1.P - beta.num);
+                oddBeta = CurveSecp256k1.P - beta;
             } else {
-                evenBeta = Secp256k1.fieldValue(Secp256k1.P - beta.num);
+                evenBeta = CurveSecp256k1.P - beta;
                 oddBeta = beta;
             }
 
             const isEven = buf[0] === 0x02;
             if (isEven) {
-                return Secp256k1.point(x.num, evenBeta.num);
+                return new CurvePoint(CurveSecp256k1, x, evenBeta);
             } else {
-                return Secp256k1.point(x.num, oddBeta.num);
+                return new CurvePoint(CurveSecp256k1, x, oddBeta);
             }
         }
     }
@@ -63,22 +64,12 @@ export class SecCodec {
      * 0x03 + x => when y is odd
      * ```
      */
-    public static encode(
-        point: Point<FieldValue>,
-        compressed: boolean = false
-    ): Buffer {
+    public static encode(point: CurvePoint, compressed: boolean = false): Buffer {
         if (compressed) {
-            const prefix = point.y.num % 2n === 0n ? 2 : 3;
-            return Buffer.concat([
-          Buffer.from([prefix]),
-          bigToBuf(point.x.num)
-        ]); // prettier-ignore
+            const prefix = point.y % 2n === 0n ? 2 : 3;
+            return Buffer.concat([Buffer.from([prefix]), bigToBuf(point.x)]);
         } else {
-            return Buffer.concat([
-                Buffer.from([0x04]),
-                bigToBuf(point.x.num),
-                bigToBuf(point.y.num),
-            ]);
+            return Buffer.concat([Buffer.from([0x04]), bigToBuf(point.x), bigToBuf(point.y)]);
         }
     }
 }

@@ -58,13 +58,3 @@ export function pow(base: bigint, exp: bigint, modulus: bigint): bigint {
     }
     return result;
 }
-
-/**
- * Returns a tuple containing the quotient and remainder when the
- * divident (num) is divided by the divisor (mod).
- * @param num divident
- * @param mod divisor
- */
-export function divmod(num: bigint, mod: bigint): [bigint, bigint] {
-    return [num / mod, num % mod];
-}
