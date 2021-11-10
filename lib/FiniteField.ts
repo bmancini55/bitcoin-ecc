@@ -11,6 +11,15 @@ export class FiniteField {
     constructor(readonly p: bigint) {}
 
     /**
+     * Returns a value converted into a valid value in the field. This
+     * takes the form `a % p`
+     * @param a
+     */
+    public mod(a: bigint): bigint {
+        return mod(a, this.p);
+    }
+
+    /**
      * Throws if the value is not in the field
      * @param a
      */

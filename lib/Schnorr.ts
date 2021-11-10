@@ -1,9 +1,9 @@
 import { Secp256k1 } from "./Secp256k1";
-import { mod, pow } from "./util/BigIntMath";
 import { bigFromBuf, bigToBuf } from "./util/BigIntUtil";
 import { combine, xor } from "./util/BufferUtil";
 import { sha256 } from "./util/Sha256";
 import { CurvePoint } from "./CurvePoint";
+import { mod, pow } from "./util/BigIntMath";
 
 function hash(tag: string, ...value: Buffer[]): Buffer {
     const tagHash = sha256(Buffer.from(tag, "utf8"));
@@ -12,10 +12,15 @@ function hash(tag: string, ...value: Buffer[]): Buffer {
 
 function lift(x: bigint): CurvePoint {
     const p = Secp256k1.P;
-    const c = mod(x ** 3n + 7n, p);
-    const y = pow(c, (p + 1n) / 4n, p);
+    const f = Secp256k1.field;
 
-    if (c !== pow(y, 2n, p)) {
+    // c=x^3+7
+    const c = f.add(f.pow(x, 3n), 7n);
+
+    // sqrt(c) = c^((p+1)/4)
+    const y = f.sqrt(c);
+
+    if (c !== f.pow(y, 2n)) {
         throw new Error("liftX failed");
     }
 
@@ -24,6 +29,8 @@ function lift(x: bigint): CurvePoint {
 
 export class Schnorr {
     public static sign(sk: Buffer, m: Buffer, a: Buffer): Buffer {
+        const f = Secp256k1.field;
+
         // d' = int(sk)
         const dp = bigFromBuf(sk);
 
