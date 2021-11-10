@@ -1,8 +1,8 @@
 {
-    "name": "schnorr",
+    "name": "bitcoin-ecc",
     "version": "0.1.0",
-    "description": "",
-    "main": "index.js",
+    "description": "Bitcoin Elliptic Curve Cryptography",
+    "main": "lib",
     "directories": {
         "lib": "lib"
     },
