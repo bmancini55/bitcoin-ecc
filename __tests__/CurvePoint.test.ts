@@ -4,7 +4,7 @@ import { CurvePoint } from "../lib/CurvePoint";
 
 describe("CurvePoint", () => {
     describe(".add()", () => {
-        const curve = new Curve(223n, 0n, 7n, 223n, 17n, 56n);
+        const curve = new Curve(223n, 0n, 7n, 21n, 17n, 56n);
 
         it("should add different points", () => {
             const p1 = new CurvePoint(curve, 192n, 105n);
@@ -72,7 +72,7 @@ describe("CurvePoint", () => {
     });
 
     describe(".smul()", () => {
-        const curve = new Curve(223n, 0n, 7n, 223n, 47n, 71n);
+        const curve = new Curve(223n, 0n, 7n, 21n, 47n, 71n);
 
         const tests = [
             [1n, [47n, 71n]],
@@ -88,6 +88,12 @@ describe("CurvePoint", () => {
                 expect(p2.x).to.equal(ex[0]);
                 expect(p2.y).to.equal(ex[1]);
             });
+        }
+
+        for (let i = 1n; i < 223n; i++) {
+            if (curve.G.smul(i).x === undefined) {
+                console.log("poi", i);
+            }
         }
     });
 });

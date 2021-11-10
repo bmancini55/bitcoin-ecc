@@ -5,14 +5,6 @@ export function bigToBuf(num: bigint, len?: number): Buffer {
     return Buffer.from(str, "hex");
 }
 
-export function bigToBufLE(num: bigint, len?: number): Buffer {
-    return bigToBuf(num, len).reverse();
-}
-
 export function bigFromBuf(buf: Buffer): bigint {
     return BigInt("0x" + buf.toString("hex"));
-}
-
-export function bigFromBufLE(buf: Buffer): bigint {
-    return bigFromBuf(Buffer.from(buf).reverse());
 }
