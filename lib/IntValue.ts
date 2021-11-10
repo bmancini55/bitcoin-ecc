@@ -49,4 +49,8 @@ export class IntValue implements IOperable {
     public isEven(): boolean {
         return mod(this.value, 2n) === 0n;
     }
+
+    public neg(): IntValue {
+        return new IntValue(-this.value);
+    }
 }

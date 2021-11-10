@@ -116,10 +116,7 @@ export class FieldValue implements IOperable {
         if (this.prime !== other.prime) {
             throw new Error(`Cannot divide two numbers in different Fields`);
         }
-        const num = mod(
-            this.num * pow(other.num, this.prime - 2n, this.prime),
-            this.prime
-        );
+        const num = mod(this.num * pow(other.num, this.prime - 2n, this.prime), this.prime);
         return new FieldValue(num, this.prime);
     }
 
@@ -171,5 +168,16 @@ export class FieldValue implements IOperable {
      */
     public isEven(): boolean {
         return mod(this.num, 2n) === 0n;
+    }
+
+    /**
+     * Negates the field value with the formula `p-n`. This follows from
+     * ```
+     * n + (p - n) = 0;
+     * ```
+     * @returns
+     */
+    public neg(): FieldValue {
+        return new FieldValue(this.prime - this.num, this.prime);
     }
 }

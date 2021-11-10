@@ -19,5 +19,6 @@ export interface IOperable {
     div(other: IOperable): IOperable;
     pow(exponent: bigint): IOperable;
     smul(scalar: bigint): IOperable;
+    neg(): IOperable;
     isEven(): boolean;
 }
