@@ -1,13 +1,13 @@
 import { expect } from "chai";
 import { EcdsaSig } from "../lib/EcdsaSig";
-import { CurveSecp256k1 } from "../lib/Secp256k1";
+import { Secp256k1 } from "../lib/Secp256k1";
 import { Ecdsa } from "../lib/Ecdsa";
 import { CurvePoint } from "../lib/CurvePoint";
 
 describe("Ecdsa", () => {
     describe(".verify()", () => {
         const point = new CurvePoint(
-            CurveSecp256k1,
+            Secp256k1,
             0x887387e452b8eacc4acfde10d9aaf7f6d9a0f975aabb10d006e4da568744d06cn,
             0x61de6d95231cd89026e286df3b6ae4a894a3378e393e93a0f45b666329a0ae34n
         );

@@ -3,13 +3,13 @@ import { EcdsaSig } from "../lib/EcdsaSig";
 import crypto from "crypto";
 import { bigFromBuf } from "../lib/util/BigIntUtil";
 import { Ecdsa } from "../lib/Ecdsa";
-import { CurveSecp256k1 } from "../lib/Secp256k1";
+import { Secp256k1 } from "../lib/Secp256k1";
 
 describe("Signature", () => {
     describe("sign", () => {
         it("creates valid sig", () => {
             const secret = bigFromBuf(crypto.randomBytes(32));
-            const point = CurveSecp256k1.pubPoint(secret);
+            const point = Secp256k1.pubPoint(secret);
             const z = bigFromBuf(crypto.randomBytes(32));
             const sig = Ecdsa.sign(secret, z);
             expect(Ecdsa.verify(point, z, sig)).to.equal(true);

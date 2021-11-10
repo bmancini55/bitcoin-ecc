@@ -1,6 +1,6 @@
 import { Curve } from "./Curve";
 
-export const CurveSecp256k1 = new Curve(
+export const Secp256k1 = new Curve(
     2n ** 256n - 2n ** 32n - 977n,
     0n,
     7n,
