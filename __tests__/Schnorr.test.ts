@@ -2,6 +2,7 @@ import path from "path";
 import { expect } from "chai";
 import { readFileSync } from "fs";
 import { Schnorr } from "../lib/Schnorr";
+import { SchnorrSig } from "../lib/SchnorrSig";
 
 describe("Schnorr", () => {
     const csv = readFileSync(path.join(__dirname, "../__fixtures__/bip340_vectors.csv")).toString(
@@ -19,8 +20,9 @@ describe("Schnorr", () => {
                 const sigBuf = Buffer.from(sig, "hex");
 
                 const result = Schnorr.sign(secretBuf, messageBuf, auxBuf);
-                const r = result.slice(0, 32);
-                const s = result.slice(32);
+                const resultBuf = result.toBuffer();
+                const r = resultBuf.slice(0, 32);
+                const s = resultBuf.slice(32);
                 expect(r.toString("hex")).to.equal(sigBuf.slice(0, 32).toString("hex"));
                 expect(s.toString("hex")).to.equal(sigBuf.slice(32).toString("hex"));
             });
@@ -30,10 +32,11 @@ describe("Schnorr", () => {
             const pubkeyBuf = Buffer.from(pubkey, "hex");
             const messageBuf = Buffer.from(message, "hex");
             const sigBuf = Buffer.from(sig, "hex");
+            const ssig = SchnorrSig.fromBuf(sigBuf);
 
             const resBool = result === "TRUE";
             try {
-                expect(Schnorr.verify(pubkeyBuf, messageBuf, sigBuf)).to.equal(resBool);
+                expect(Schnorr.verify(pubkeyBuf, messageBuf, ssig)).to.equal(resBool);
             } catch (ex) {
                 expect(resBool).to.equal(false);
             }

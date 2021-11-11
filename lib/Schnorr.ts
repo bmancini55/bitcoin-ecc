@@ -4,6 +4,7 @@ import { combine, xor } from "./util/BufferUtil";
 import { sha256 } from "./util/Sha256";
 import { CurvePoint } from "./CurvePoint";
 import { mod, pow } from "./util/BigIntMath";
+import { SchnorrSig } from "./SchnorrSig";
 
 function hash(tag: string, ...value: Buffer[]): Buffer {
     const tagHash = sha256(Buffer.from(tag, "utf8"));
@@ -28,7 +29,7 @@ function lift(x: bigint): CurvePoint {
 }
 
 export class Schnorr {
-    public static sign(sk: Buffer, m: Buffer, a: Buffer): Buffer {
+    public static sign(sk: Buffer, m: Buffer, a: Buffer): SchnorrSig {
         const f = Secp256k1.field;
 
         // d' = int(sk)
@@ -71,8 +72,11 @@ export class Schnorr {
             Secp256k1.N
         );
 
-        // sig = bytes(R) || bytes((k + ed) mod n)
-        const sig = combine(bigToBuf(R.x, 32), bigToBuf(mod(k + e * d, Secp256k1.N), 32));
+        // s = (k + ed) mod n
+        const s = mod(k + e * d, Secp256k1.N);
+
+        // sig = bytes(R) || bytes(s)
+        const sig = new SchnorrSig(R.x, s);
 
         // Verify(bytes(P), m, sig) (see below) returns failure, abort
         if (!Schnorr.verify(bigToBuf(P.x, 32), m, sig)) {
@@ -83,7 +87,7 @@ export class Schnorr {
         return sig;
     }
 
-    public static verify(pk: Buffer, m: Buffer, sig: Buffer): boolean {
+    public static verify(pk: Buffer, m: Buffer, sig: SchnorrSig): boolean {
         if (pk.length !== 32) {
             throw new Error("Invalid public key for Schnorr verification");
         }
@@ -92,33 +96,27 @@ export class Schnorr {
             throw new Error("Invalid message for Schnorr verification");
         }
 
-        if (sig.length !== 64) {
-            throw new Error("Invalid signature for Schnorr verification");
-        }
-
         // P = lift_x(int(pk)); fail if that fails.
         const P = lift(bigFromBuf(pk));
 
         // r = int(sig[0:32]); fail if r ≥ p.
-        const r = bigFromBuf(sig.slice(0, 32));
-        if (r >= Secp256k1.P) {
+        if (sig.r >= Secp256k1.P) {
             throw new Error("Invalid r in Schnorr signiture");
         }
 
         // s = int(sig[32:64]); fail if s ≥ n
-        const s = bigFromBuf(sig.slice(32));
-        if (s >= Secp256k1.N) {
+        if (sig.s >= Secp256k1.N) {
             throw new Error("Invalid s in Schnorr signiture");
         }
 
         // e = int(hashBIP0340/challenge(bytes(r) || bytes(P) || m)) mod n
         const e = mod(
-            bigFromBuf(hash("BIP0340/challenge", bigToBuf(r, 32), bigToBuf(P.x, 32), m)),
+            bigFromBuf(hash("BIP0340/challenge", bigToBuf(sig.r, 32), bigToBuf(P.x, 32), m)),
             Secp256k1.N
         );
 
         // R = s⋅G - e⋅P
-        const R = Secp256k1.G.smul(s).sub(P.smul(e));
+        const R = Secp256k1.G.smul(sig.s).sub(P.smul(e));
 
         // Fail if is_infinite(R).
         if (R.x === undefined) {
@@ -131,7 +129,7 @@ export class Schnorr {
         }
 
         // Fail if x(R) ≠ r.
-        if (R.x !== r) {
+        if (R.x !== sig.r) {
             return false;
         }
 
