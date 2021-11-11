@@ -89,11 +89,5 @@ describe("CurvePoint", () => {
                 expect(p2.y).to.equal(ex[1]);
             });
         }
-
-        for (let i = 1n; i < 223n; i++) {
-            if (curve.G.smul(i).x === undefined) {
-                console.log("poi", i);
-            }
-        }
     });
 });
