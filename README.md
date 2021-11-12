@@ -11,8 +11,9 @@ Math primitives:
 -   [FiniteField](./lib/FiniteField.ts) - defines a finite field and its
     math operations
 -   [Curve](./lib/Curve.ts) - defines an elliptic curve
--   [CurvePoint](./lib/CurvePoint) - defines a point on an elliptic
+-   [CurvePoint](./lib/CurvePoint.ts) - defines a point on an elliptic
     curve and its math operations
+-   [Secp256k1](./lib/Secp256k1.ts) - Definition for curve secp256k1
 
 Signature schemes:
 
