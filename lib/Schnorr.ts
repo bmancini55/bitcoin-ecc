@@ -3,8 +3,9 @@ import { bigFromBuf, bigToBuf } from "./util/BigIntUtil";
 import { combine, xor } from "./util/BufferUtil";
 import { sha256 } from "./util/Sha256";
 import { CurvePoint } from "./CurvePoint";
-import { mod, pow } from "./util/BigIntMath";
+import { mod } from "./util/BigIntMath";
 import { SchnorrSig } from "./SchnorrSig";
+import crypto from "crypto";
 
 /**
  * Implements signing and verifing Schnorr signatures as implemented in
@@ -176,6 +177,63 @@ export class Schnorr {
         }
 
         // otherwise return true
+        return true;
+    }
+
+    /**
+     * Performs batch verification of a sequence of pubkey, messge,
+     * signature tuples.
+     * @param pks
+     * @param ms
+     * @param sigs
+     */
+    public static batchVerify(pks: Buffer[], msgs: Buffer[], sigs: SchnorrSig[]): boolean {
+        if (pks.length !== msgs.length || pks.length !== sigs.length) {
+            throw new Error("Invalid inputs");
+        }
+
+        const u = pks.length;
+
+        // Generate  a seed for a CSPRNG using sha256 and combining the
+        // input data.
+        // seed = seed_hash(pk1..pku || m1..mu || sig1..sigu )
+        const seed = sha256(combine(...pks, ...msgs, ...sigs.map(sig => sig.toBuffer())));
+
+        // Next we use ChaCha20 to generate u-1 random numbers between 1
+        // and the group order for secp256k1.
+        const csprng = crypto.createCipheriv("chacha20", seed, Buffer.alloc(16));
+        const u256 = Buffer.alloc(32);
+        const as: bigint[] = [1n];
+        while (as.length < u) {
+            const a = bigFromBuf(csprng.update(u256));
+            if (a > 0n || a < Secp256k1.N) {
+                as.push(a);
+            }
+        }
+
+        let l: bigint;
+        let r: CurvePoint;
+
+        for (let i = 0; i < u; i++) {
+            const P = lift(bigFromBuf(pks[i]));
+            const ri = sigs[i].r;
+            const si = sigs[i].s;
+            const ei = bigFromBuf(hash("BIP0340/challenge", bigToBuf(ri), pks[i], msgs[i]));
+            const R = lift(ri);
+            const ai = as[i];
+
+            if (i === 0) {
+                l = sigs[i].s;
+                r = R.add(P.smul(ei));
+            } else {
+                l = mod(l + ai * sigs[i].s, Secp256k1.N);
+                r = r.add(R.smul(ai)).add(P.smul(ai).smul(ei));
+            }
+        }
+
+        const sG = Secp256k1.pubPoint(l);
+        if (!sG.eq(r)) return false;
+
         return true;
     }
 }
