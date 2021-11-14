@@ -183,6 +183,16 @@ export class Schnorr {
     /**
      * Performs batch verification of a sequence of pubkey, messge,
      * signature tuples.
+     *
+     * @remarks
+     * Batch verification works because schnorr signatures are linear.
+     * As such we can simply add up the signatures and in doing so we
+     * can check that the equation holds after adding all the parts:
+     *
+     * ```
+     * s*G = R + c*e*G
+     * ```
+     *
      * @param pks
      * @param ms
      * @param sigs
@@ -223,10 +233,10 @@ export class Schnorr {
             const ai = as[i];
 
             if (i === 0) {
-                l = sigs[i].s;
+                l = si;
                 r = R.add(P.smul(ei));
             } else {
-                l = mod(l + ai * sigs[i].s, Secp256k1.N);
+                l = mod(l + ai * si, Secp256k1.N);
                 r = r.add(R.smul(ai)).add(P.smul(ai).smul(ei));
             }
         }
