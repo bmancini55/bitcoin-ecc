@@ -1,5 +1,6 @@
 import { FiniteField } from "./FiniteField";
 import { CurvePoint } from "./CurvePoint";
+import { CurveScalar } from "./CurveScalar";
 
 /**
  * Defines a finite field elliptic curve such as those used in
@@ -16,6 +17,11 @@ export class Curve {
      * Finite field of the curve
      */
     public field: FiniteField;
+
+    /**
+     * Cyclic group of the curve.
+     */
+    public group: FiniteField;
 
     /**
      * Generator point
@@ -39,6 +45,7 @@ export class Curve {
         readonly Gy: bigint
     ) {
         this.field = new FiniteField(P);
+        this.group = new FiniteField(N);
         this.G = new CurvePoint(this, Gx, Gy);
     }
 
