@@ -11,12 +11,15 @@ export class Ecdsa {
      * @param z
      */
     public static sign(secret: bigint, z: bigint): EcdsaSig {
+        const g = Secp256k1.group;
         const k = Rfc6979.genK(secret, z, Secp256k1.N);
         const r = Secp256k1.G.smul(k).x;
-        const kinv = pow(k, Secp256k1.N - 2n, Secp256k1.N);
-        let s = mod((z + r * secret) * kinv, Secp256k1.N);
-        if (s > Secp256k1.N / 2n) {
-            s = Secp256k1.N - s;
+        // const kinv = pow(k, Secp256k1.N - 2n, Secp256k1.N);
+        // let s = mod((z + r * secret) * kinv, Secp256k1.N);
+
+        let s = g.div(g.add(z, g.mul(r, secret)), k);
+        if (s > g.p / 2n) {
+            s = g.neg(s);
         }
         return new EcdsaSig(r, s);
     }
@@ -44,9 +47,9 @@ export class Ecdsa {
      * @param sig signature r,s
      */
     public static verify(point: CurvePoint, z: bigint, sig: EcdsaSig): boolean {
-        const sinv = pow(sig.s, Secp256k1.N - 2n, Secp256k1.N);
-        const u = mod(z * sinv, Secp256k1.N);
-        const v = mod(sig.r * sinv, Secp256k1.N);
+        const g = Secp256k1.group;
+        const u = g.div(z, sig.s);
+        const v = g.div(sig.r, sig.s);
         const total = Secp256k1.G.smul(u).add(point.smul(v));
         return sig.r === total.x;
     }
