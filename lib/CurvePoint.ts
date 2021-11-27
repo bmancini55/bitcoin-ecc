@@ -1,4 +1,5 @@
 import { Curve } from "./Curve";
+import { CurveScalar } from "./CurveScalar";
 
 /**
  * This class is a a generic point on some elliptic cuve. The curve must
@@ -112,15 +113,16 @@ export class CurvePoint {
      * Scalar multiply a point using binary expansion
      * @param scalar
      */
-    public smul(scalar: bigint): CurvePoint {
+    public smul(scalar: CurveScalar | bigint): CurvePoint {
+        let num = CurveScalar.isCurveScalar(scalar) ? scalar.value : scalar;
         let current: CurvePoint = this;
         let result = new CurvePoint(this.curve, undefined, undefined);
-        while (scalar) {
-            if (scalar & 1n) {
+        while (num) {
+            if (num & 1n) {
                 result = result.add(current);
             }
             current = current.add(current);
-            scalar = scalar >> 1n;
+            num = num >> 1n;
         }
         return result;
     }
