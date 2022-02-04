@@ -14,12 +14,12 @@ import { CurveScalar } from "./CurveScalar";
  */
 export class Curve {
     /**
-     * Finite field of the curve
+     * Finite field of the elliptic curve
      */
     public field: FiniteField;
 
     /**
-     * Cyclic group of the curve.
+     * Cyclic group of the elliptic curve
      */
     public group: FiniteField;
 
@@ -37,11 +37,30 @@ export class Curve {
      * @param Gy
      */
     constructor(
+        /**
+         * Order of the finite field the elliptic curve is defined over
+         */
         readonly P: bigint,
+        /**
+         * Parameter of the elliptic curve
+         */
         readonly a: bigint,
+        /**
+         * Parameter of th elliptic curve
+         */
         readonly b: bigint,
+        /**
+         * Order of the group. Prime value such that `nG=0`.  Sometimes
+         * referred to as the curve order.
+         */
         readonly N: bigint,
+        /**
+         * X-coordinate of the generator point
+         */
         readonly Gx: bigint,
+        /**
+         * Y-coordinate of the generator point
+         */
         readonly Gy: bigint
     ) {
         this.field = new FiniteField(P);
