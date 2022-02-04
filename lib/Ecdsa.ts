@@ -6,11 +6,15 @@ import { CurvePoint } from "./CurvePoint";
 
 export class Ecdsa {
     /**
-     * Signs a message `z` using the provided `secret`.
+     * Signs a message `z` using the provided `secret`. By default this
+     * makes the signature use a low-s value (that is s is <= n/2 where
+     * n is the order of the group for the curve.
+     *
      * @param secret
-     * @param z
+     * @param z hash of the message
+     * @param lowS indicates if BIP146 low-s compliant is required
      */
-    public static sign(secret: bigint, z: bigint): EcdsaSig {
+    public static sign(secret: bigint, z: bigint, lowS: boolean = true): EcdsaSig {
         const g = Secp256k1.group;
         const k = Rfc6979.genK(secret, z, Secp256k1.N);
         const r = Secp256k1.G.smul(k).x;
@@ -18,7 +22,7 @@ export class Ecdsa {
         // let s = mod((z + r * secret) * kinv, Secp256k1.N);
 
         let s = g.div(g.add(z, g.mul(r, secret)), k);
-        if (s > g.p / 2n) {
+        if (lowS && s > g.p / 2n) {
             s = g.neg(s);
         }
         return new EcdsaSig(r, s);
