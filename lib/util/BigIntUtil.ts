@@ -8,3 +8,8 @@ export function bigToBuf(num: bigint, len?: number): Buffer {
 export function bigFromBuf(buf: Buffer): bigint {
     return BigInt("0x" + buf.toString("hex"));
 }
+
+export function bigToHex(value: bigint, bytes: number) {
+    const result = value.toString(16);
+    return result.padStart(bytes * 2, "0");
+}
