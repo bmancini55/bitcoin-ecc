@@ -5,6 +5,7 @@ import { Ecdsa } from "../lib/Ecdsa";
 import { CurvePoint } from "../lib/CurvePoint";
 import { CurveScalar } from "../lib/CurveScalar";
 import { SecCodec } from "../lib/SecCodec";
+import { bigToHex } from "../lib/util/BigIntUtil";
 
 describe("Ecdsa", () => {
     describe(".verify()", () => {
@@ -31,17 +32,29 @@ describe("Ecdsa", () => {
         });
     });
 
-    describe("mutability", () => {
+    describe("malleability", () => {
+        it("eG=(x,y) and (n-e)G=(x,p-y)", () => {
+            const prvkey1 = 1n;
+            const prvkey2 = Secp256k1.N - 1n;
+
+            const pubkey1 = Secp256k1.pubPoint(prvkey1);
+            const pubkey2 = Secp256k1.pubPoint(prvkey2);
+
+            expect(pubkey1.x).to.equal(pubkey2.x);
+            expect(pubkey1.y).to.equal(Secp256k1.P - pubkey2.y);
+        });
+
         it("(r,s) === (r,N-s)", () => {
+            const z = 2n;
             const privkey = 1n;
             const pubkey = Secp256k1.pubPoint(privkey);
 
-            const z = 2n;
             const sig1 = Ecdsa.sign(privkey, z, false);
             const sig2 = new EcdsaSig(sig1.r, Secp256k1.N - sig1.s);
 
             expect(Ecdsa.verify(pubkey, z, sig1)).to.equal(true);
             expect(Ecdsa.verify(pubkey, z, sig2)).to.equal(true);
+            expect(sig1.s).to.equal(Secp256k1.N - sig2.s);
         });
     });
 });
